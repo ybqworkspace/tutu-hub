@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ion Lab · 离子训练营</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,"PingFang SC","Segoe UI",Roboto,sans-serif;background:#f6f9fc;color:#1c2b3a;line-height:1.55;padding:16px}
+  .wrap{max-width:760px;margin:0 auto}
+  header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+  h1{font-size:22px;color:#0f4c81}
+  h1 small{display:block;font-size:12px;color:#5b7a99;font-weight:400}
+  #langBtn{border:1px solid #0f4c81;background:#fff;color:#0f4c81;border-radius:999px;padding:6px 14px;font-size:13px;cursor:pointer}
+  #langBtn:hover{background:#e8f1f8}
+  .card{background:#fff;border-radius:14px;box-shadow:0 1px 4px rgba(15,76,129,.12);padding:18px;margin-top:14px}
+  h2{font-size:16px;color:#0f4c81;margin-bottom:10px}
+  .modes{display:grid;grid-template-columns:1fr;gap:10px}
+  @media(min-width:560px){.modes{grid-template-columns:1fr 1fr 1fr}}
+  .modeBtn{display:block;width:100%;text-align:left;border:1.5px solid #cfe0ee;background:#fbfdff;border-radius:12px;padding:14px;cursor:pointer;transition:.15s}
+  .modeBtn:hover{border-color:#0f4c81;background:#eef5fb}
+  .modeBtn b{font-size:15px;color:#0f4c81;display:block}
+  .modeBtn .d{font-size:12px;color:#5b7a99;display:block;margin-top:2px}
+  .modeBtn .best{font-size:12px;color:#c8792a;display:block;margin-top:4px}
+  .modeBtn .icon{font-size:22px;display:block;margin-bottom:4px}
+  .bar{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:#5b7a99;flex-wrap:wrap;gap:6px}
+  .bar .sc{color:#0f4c81;font-weight:600}
+  .bar .streak{color:#c8792a;font-weight:600}
+  .progress{height:6px;background:#e3edf5;border-radius:3px;margin-top:8px;overflow:hidden}
+  .progress i{display:block;height:100%;background:#2e9e6b;border-radius:3px;transition:width .25s}
+  .q{font-size:15px;color:#33475b;margin:14px 0 4px}
+  .prompt{font-size:30px;font-weight:700;color:#0f4c81;text-align:center;margin:10px 0 4px;letter-spacing:.5px}
+  .promptSmall{text-align:center;color:#5b7a99;font-size:13px;margin-bottom:6px}
+  .opts{display:grid;gap:8px;margin-top:12px}
+  .opt{display:block;width:100%;border:1.5px solid #cfe0ee;background:#fff;border-radius:10px;padding:12px;font-size:16px;cursor:pointer;text-align:center;transition:.12s;font-family:inherit}
+  .opt:hover:not(:disabled){border-color:#0f4c81;background:#eef5fb}
+  .opt:disabled{cursor:default;opacity:.75}
+  .opt.ok{border-color:#2e9e6b;background:#e6f5ec;font-weight:700}
+  .opt.no{border-color:#d9534f;background:#fdeceb}
+  .fb{border-radius:10px;padding:12px;font-size:14px;margin-top:12px;display:none}
+  .fb.good{background:#e6f5ec;color:#1d6a46;display:block}
+  .fb.bad{background:#fdeceb;color:#8f2f2b;display:block}
+  .fb b{display:block;margin-bottom:4px}
+  .facts{display:inline-block;background:#eef5fb;border-radius:6px;padding:1px 8px;margin:6px 0;font-weight:600;color:#0f4c81}
+  .rowBtns{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+  .btn{border:none;border-radius:10px;padding:11px 18px;font-size:14px;cursor:pointer;font-family:inherit}
+  .btn.primary{background:#0f4c81;color:#fff}
+  .btn.primary:hover{background:#0a3a63}
+  .btn.ghost{background:#e3edf5;color:#0f4c81}
+  .btn.green{background:#2e9e6b;color:#fff}
+  .btn.big{flex:1;min-width:150px;font-size:15px;padding:13px}
+  .resultStars{font-size:40px;text-align:center}
+  .scoreBig{text-align:center;font-size:34px;font-weight:800;color:#0f4c81;margin:6px 0}
+  .msg{text-align:center;color:#5b7a99;font-size:14px;margin-bottom:4px}
+  details{border:1px solid #cfe0ee;border-radius:10px;background:#fff;padding:0;margin-top:14px;overflow:hidden}
+  summary{padding:12px 14px;cursor:pointer;font-weight:600;color:#0f4c81;font-size:14px;background:#fbfdff}
+  summary:hover{background:#eef5fb}
+  .in{padding:12px 14px}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{border-bottom:1px solid #e3edf5;padding:6px 6px;text-align:left}
+  th{color:#5b7a99;font-weight:600}
+  .mono{font-family:Menlo,Consolas,monospace;white-space:nowrap}
+  .tag{display:inline-block;font-size:11px;border-radius:999px;padding:1px 8px;margin-right:6px}
+  .tag.c{background:#e6f5ec;color:#1d6a46}
+  .tag.a{background:#fdeceb;color:#8f2f2b}
+  .tips li{margin:6px 0 6px 18px;font-size:13.5px;color:#33475b}
+  .qline{font-size:15px;font-weight:600;color:#0f4c81;margin:14px 0 8px}
+  .quizOpt{display:block;width:100%;border:1.5px solid #cfe0ee;background:#fff;border-radius:10px;padding:11px 12px;font-size:14px;text-align:left;cursor:pointer;margin-bottom:8px;font-family:inherit}
+  .quizOpt:hover:not(:disabled){border-color:#0f4c81;background:#eef5fb}
+  .quizOpt.ok{border-color:#2e9e6b;background:#e6f5ec;font-weight:700}
+  .quizOpt.no{border-color:#d9534f;background:#fdeceb}
+  .hidden{display:none}
+  .fine{font-size:12px;color:#8ba3b8;margin-top:10px;text-align:center}
+  footer{margin-top:18px;padding-bottom:20px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Ion Lab<small>IGCSE 常用离子训练营 · common ions trainer</small></h1>
+    <button id="langBtn" type="button"></button>
+  </header>
+
+  <div id="main"></div>
+
+  <details id="cheat">
+    <summary>📋 Cheat sheet · 速查表</summary>
+    <div class="in" id="cheatIn"></div>
+  </details>
+
+  <footer>
+    <div class="card" id="caQuizWrap">
+      <h2>🎯 Spot-check quiz · 考点小测</h2>
+      <div id="caQuiz"></div>
+    </div>
+    <div class="fine">Made for Milo · IGCSE Chemistry · no internet needed once downloaded</div>
+  </footer>
+</div>
+
+<script>
+/* ---------- language ---------- */
+var lang = 'en';
+try { if (localStorage.getItem('ionlab-lang') === 'zh') lang = 'zh'; } catch(e){}
+function T(zh, en){ return lang === 'zh' ? zh : en; }
+function storeLang(){
+  try { localStorage.setItem('ionlab-lang', lang); } catch(e){}
+}
+
+/* ---------- data: 21 common IGCSE ions ---------- */
+/* kind: c = cation (+), a = anion (-) */
+var IONS = [
+  {en:'sodium',          zh:'钠',          f:'Na⁺',    c:1,  kind:'c'},
+  {en:'potassium',       zh:'钾',          f:'K⁺',     c:1,  kind:'c'},
+  {en:'silver',          zh:'银',          f:'Ag⁺',    c:1,  kind:'c'},
+  {en:'ammonium',        zh:'铵根',        f:'NH₄⁺',   c:1,  kind:'c'},
+  {en:'magnesium',       zh:'镁',          f:'Mg²⁺',   c:2,  kind:'c'},
+  {en:'calcium',         zh:'钙',          f:'Ca²⁺',   c:2,  kind:'c'},
+  {en:'zinc',            zh:'锌',          f:'Zn²⁺',   c:2,  kind:'c'},
+  {en:'copper(II)',      zh:'铜(Ⅱ)',       f:'Cu²⁺',   c:2,  kind:'c'},
+  {en:'iron(II)',        zh:'铁(Ⅱ)',       f:'Fe²⁺',   c:2,  kind:'c'},
+  {en:'aluminium',       zh:'铝',          f:'Al³⁺',   c:3,  kind:'c'},
+  {en:'iron(III)',       zh:'铁(Ⅲ)',       f:'Fe³⁺',   c:3,  kind:'c'},
+  {en:'chloride',        zh:'氯',          f:'Cl⁻',    c:-1, kind:'a'},
+  {en:'bromide',         zh:'溴',          f:'Br⁻',    c:-1, kind:'a'},
+  {en:'iodide',          zh:'碘',          f:'I⁻',     c:-1, kind:'a'},
+  {en:'hydroxide',       zh:'氢氧根',      f:'OH⁻',    c:-1, kind:'a'},
+  {en:'nitrate',         zh:'硝酸根',      f:'NO₃⁻',   c:-1, kind:'a'},
+  {en:'hydrogencarbonate',zh:'碳酸氢根',   f:'HCO₃⁻',  c:-1, kind:'a'},
+  {en:'oxide',           zh:'氧',          f:'O²⁻',    c:-2, kind:'a'},
+  {en:'sulfide',         zh:'硫',          f:'S²⁻',    c:-2, kind:'a'},
+  {en:'sulfate',         zh:'硫酸根',      f:'SO₄²⁻',  c:-2, kind:'a'},
+  {en:'carbonate',       zh:'碳酸根',      f:'CO₃²⁻',  c:-2, kind:'a'},
+  {en:'phosphate',       zh:'磷酸根',      f:'PO₄³⁻',  c:-3, kind:'a'}
+];
+var CHARGE_SET = [1,2,3,-1,-2,-3];
+function chargeTxt(c){ return (c > 0 ? '+' : '-') + Math.abs(c); }
+
+/* ---------- modes ---------- */
+var MODES = {
+  f2name:{ icon:'🔤', en:'Formula → Name', zh:'化学式 → 英文名',
+           den:'Read the formula, choose its English name', dzh:'看化学式，选出对应的英文名' },
+  name2f:{ icon:'🧪', en:'Name → Formula', zh:'英文名 → 化学式',
+           den:'Read the English name, choose its formula', dzh:'看英文名，选出对应的化学式' },
+  charge:{ icon:'⚡', en:'Formula → Charge', zh:'化学式 → 电荷',
+           den:'What is the overall charge of this ion?', dzh:'这个离子整体带多少电荷？' }
+};
+
+/* ---------- game state ---------- */
+var state = { screen:'home', mode:'f2name', qs:[], qi:0, picked:false, score:0, streak:0, best:{} };
+function loadBest(m){ try { return +localStorage.getItem('ionlab-best-'+m) || 0; } catch(e){ return 0; } }
+function saveBest(m, s){ try { if (s > loadBest(m)) localStorage.setItem('ionlab-best-'+m, s); } catch(e){} }
+
+function shuffle(a){ a = a.slice(); for (var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=a[i]; a[i]=a[j]; a[j]=t; } return a; }
+function sampleDistinct(pool, n, exclude){
+  var out = [], used = {};
+  if (exclude !== undefined) used[exclude] = 1;
+  pool = shuffle(pool);
+  for (var i=0; i<pool.length && out.length < n; i++){
+    var key = typeof pool[i] === 'object' ? pool[i].f : pool[i];
+    if (used[key]) continue;
+    used[key] = 1; out.push(pool[i]);
+  }
+  return out;
+}
+
+function buildQuestions(mode){
+  var pool = shuffle(IONS).slice(0, 8);
+  return pool.map(function(item){
+    var opts, prompt, sub;
+    if (mode === 'f2name'){
+      var others = sampleDistinct(IONS, 3, item.f).filter(function(o){ return o.f !== item.f; }).slice(0,3);
+      while (others.length < 3){ others.push(item); }
+      opts = shuffle([item].concat(others.slice(0,3)));
+      prompt = item.f;
+      sub = T('这个离子是？','Which ion is this?');
+    } else if (mode === 'name2f'){
+      var os2 = sampleDistinct(IONS, 3, item.f).filter(function(o){ return o.f !== item.f; }).slice(0,3);
+      while (os2.length < 3){ os2.push(item); }
+      opts = shuffle([item].concat(os2.slice(0,3)));
+      prompt = item.en;
+      sub = T('选出它的化学式','Choose its formula');
+    } else { /* charge */
+      var cs = sampleDistinct(CHARGE_SET, 3, item.c);
+      while (cs.length < 3){ cs.push(item.c); }
+      var charOpts = shuffle([item.c].concat(cs.slice(0,3)));
+      opts = charOpts.map(function(c){ return { txt: chargeTxt(c), c:c }; });
+      prompt = item.f;
+      sub = T('整体电荷是多少？','What is its overall charge?');
+    }
+    return { item:item, prompt:prompt, sub:sub, opts:opts, mode:mode };
+  });
+}
+
+function factsLine(item){
+  return item.en + ' (' + item.zh + ') · ' + item.f + ' · charge ' + chargeTxt(item.c);
+}
+
+function explain(q, chosen, ok){
+  var item = q.item;
+  var kindTxt = item.kind === 'c' ? T('阳离子','cation') : T('阴离子','anion');
+  var lead = ok
+    ? T('答对！','Correct!')
+    : T('不对哦，看看正解。','Not quite — here is the right one.');
+  var who;
+  if (chosen && !ok){
+    if (q.mode === 'charge'){
+      who = T('你选的是 ' + chargeTxt(chosen) + '，', 'You picked ' + chargeTxt(chosen) + ', ');
+    } else {
+      var nm = chosen.en + ' (' + chosen.zh + ')';
+      who = T('你选的是 ' + nm + '，', 'You picked ' + nm + ', ');
+    }
+  } else { who = ''; }
+  var why = '';
+  if (chosen && !ok){
+    if (q.mode === 'charge'){
+      why = T('正负号或电子得失数算错了——阳离子带正电（失电子），阴离子带负电（得电子）。',
+              'Check the sign and the number of electrons lost/gained: cations are + (lost e⁻), anions are − (gained e⁻).');
+    } else {
+      var sameKind = chosen.kind === item.kind;
+      var sameCharge = chosen.c === item.c;
+      if (!sameKind) why = T('正负号混了：', 'Sign mix-up: ') + (item.kind==='c'
+        ? T('金属/铵根失电子带正电，不可能是你选的这个。','metal ions and NH₄⁺ lose electrons and are positive — not the one you chose.')
+        : T('非金属/酸根得电子带负电，不可能是你选的这个。','non-metal and acid-root ions gain electrons and are negative — not the one you chose.'));
+      else if (!sameCharge) why = T('电荷数不对：','Wrong charge: ') + T('你选的电荷是 ' + chargeTxt(chosen.c) + '，正解是 ' + chargeTxt(item.c) + '。',
+        'yours is ' + chargeTxt(chosen.c) + ', the correct one is ' + chargeTxt(item.c) + '.');
+      else why = T('电荷相同但离子不同——把元素符号和下标看清楚（如 SO₄²⁻ 与 S²⁻ 完全不同）。',
+        'Same charge but a different ion — check the symbols and subscripts (e.g. SO₄²⁻ vs S²⁻).');
+    }
+  }
+  return { good: ok,
+    zh: '<b>' + lead + '</b> ' + who + '<span class="facts">' + factsLine(item) + '</span><br>' +
+        T('它是' + kindTxt + '。','It is a ' + kindTxt + '.') + ' ' + why,
+    en: '<b>' + lead + '</b> ' + who + '<span class="facts">' + factsLine(item) + '</span><br>' +
+        'It is a ' + kindTxt + '. ' + why };
+}
+
+/* ---------- rendering ---------- */
+function el(html){ var d = document.createElement('div'); d.innerHTML = html; return d.firstChild; }
+
+function renderHome(){
+  var html = '<div class="card"><h2>' + T('选择训练模式','Choose a training mode') + '</h2><div class="modes">';
+  Object.keys(MODES).forEach(function(k){
+    var m = MODES[k], best = loadBest(k);
+    html += '<button type="button" class="modeBtn" data-action="start" data-mode="' + k + '">'
+      + '<span class="icon">' + m.icon + '</span>'
+      + '<b>' + (lang==='zh'?m.zh:m.en) + '</b>'
+      + '<span class="d">' + (lang==='zh'?m.dzh:m.den) + '</span>'
+      + '<span class="best">' + T('最佳成绩：','Best: ') + best + (best? ' / ' + (best>=80?'⭐':'') : ' 🎯') + '</span>'
+      + '</button>';
+  });
+  html += '</div><div class="fine" style="margin-top:10px">' + T('每局 8 题 · 连对加分 · 错题即时讲解','8 questions per round · streak bonus · instant feedback') + '</div></div>';
+  return html;
+}
+
+function renderPlay(){
+  var q = state.qs[state.qi];
+  var html = '<div class="card">'
+    + '<div class="bar">'
+    + '<span>' + T('题目','Q') + ' ' + (state.qi+1) + ' / ' + state.qs.length + '</span>'
+    + '<span class="sc">' + T('得分','Score') + ': ' + state.score + '</span>'
+    + '<span class="streak">' + (state.streak >= 2 ? T('🔥 连对','🔥 streak') + ' x' + state.streak : '') + '</span>'
+    + '</div>'
+    + '<div class="progress"><i style="width:' + (state.qi/state.qs.length*100) + '%"></i></div>'
+    + '<div class="q">' + q.sub + '</div>'
+    + '<div class="prompt">' + q.prompt + '</div>'
+    + '<div class="opts">';
+  q.opts.forEach(function(o, idx){
+    var text = (q.mode === 'charge') ? o.txt : o.f;
+    html += '<button type="button" class="opt" data-action="pick" data-idx="' + idx + '">' + text + '</button>';
+  });
+  html += '</div>'
+    + '<div class="fb" id="fb"></div>'
+    + '<div class="rowBtns">'
+    + '<button type="button" class="btn ghost" data-action="home">← ' + T('退出','Exit') + '</button>'
+    + '<button type="button" class="btn primary hidden" id="nextBtn" data-action="next">' + T('下一题','Next') + ' →</button>'
+    + '</div></div>';
+  return html;
+}
+
+function renderResult(){
+  var total = state.qs.length, acc = Math.round(state.score / (total*10+40) * 100);
+  var rawAcc = state.correct / total;
+  var stars = rawAcc >= 0.9 ? '⭐⭐⭐' : rawAcc >= 0.6 ? '⭐⭐' : '⭐';
+  var msg = rawAcc >= 0.9 ? T('离子大师！','Ion master!')
+          : rawAcc >= 0.6 ? T('不错，继续巩固！','Good job — keep polishing!')
+          : T('别灰心，先看速查表再战！','Check the cheat sheet and try again!');
+  saveBest(state.mode, state.score);
+  return '<div class="card">'
+    + '<div class="resultStars">' + stars + '</div>'
+    + '<div class="scoreBig">' + state.score + '</div>'
+    + '<div class="msg">' + T('得分（含连对奖励）','Score incl. streak bonus') + '</div>'
+    + '<div class="msg">' + T('答对 ','Correct ') + state.correct + ' / ' + total + ' · '
+    + T('最佳 ','Best ') + loadBest(state.mode) + '</div>'
+    + '<div class="rowBtns">'
+    + '<button type="button" class="btn green big" data-action="start" data-mode="' + state.mode + '">' + T('再玩一局','Play again') + '</button>'
+    + '<button type="button" class="btn ghost big" data-action="home">' + T('返回选模式','Choose mode') + '</button>'
+    + '</div><div class="msg" style="margin-top:10px">' + msg + '</div></div>';
+}
+
+function renderMain(){
+  var html = '';
+  if (state.screen === 'home') html = renderHome();
+  else if (state.screen === 'play') html = renderPlay();
+  else html = renderResult();
+  document.getElementById('main').innerHTML = html;
+}
+
+/* ---------- cheat sheet ---------- */
+function renderCheat(){
+  var html = '<table><tr><th>Ion</th><th>Formula</th><th>' + T('名称','Name') + '</th><th>' + T('电荷','Charge') + '</th></tr>';
+  IONS.forEach(function(it){
+    html += '<tr><td><span class="tag ' + it.kind + '">' + (it.kind==='c' ? T('阳','+') : T('阴','−')) + '</span>'
+      + it.en + ' / ' + it.zh + '</td>'
+      + '<td class="mono">' + it.f + '</td>'
+      + '<td>' + chargeTxt(it.c) + '</td>'
+      + '<td>' + (it.c>0 ? T('阳离子','cation') : T('阴离子','anion')) + '</td></tr>';
+  });
+  html += '</table>'
+    + '<div class="qline">' + T('💡 记忆法则','💡 Memory rules') + '</div><ul class="tips">'
+    + '<li>' + T('金属失电子 → 阳离子（正），主族电荷 ≈ 族号：Na⁺、Mg²⁺、Al³⁺。',
+                 'Metals lose e⁻ → cations (+); main-group charge = group number: Na⁺, Mg²⁺, Al³⁺.') + '</li>'
+    + '<li>' + T('非金属得电子 → 阴离子（负），电荷 ≈ 8 − 族号：Cl⁻、O²⁻。',
+                 'Non-metals gain e⁻ → anions (−); charge = 8 − group number: Cl⁻, O²⁻.') + '</li>'
+    + '<li>' + T('过渡金属可变价：铁 Ⅱ/Ⅲ、铜 Ⅱ；锌 Zn²⁺、银 Ag⁺ 固定。',
+                 'Transition metals vary: iron(II)/(III), copper(II); zinc Zn²⁺ and silver Ag⁺ are fixed.') + '</li>'
+    + '<li>' + T('化合物总电荷 = 0，写化学式用「十字交叉」：Al³⁺ + O²⁻ → Al₂O₃（3 与 2 互换）。',
+                 'Compounds are neutral — write formulas by swapping charges: Al³⁺ + O²⁻ → Al₂O₃.') + '</li>'
+    + '</ul>';
+  document.getElementById('cheatIn').innerHTML = html;
+}
+
+/* ---------- spot-check quiz (3 IGCSE-style questions) ---------- */
+var CA_QUIZ = [
+  { q:{ en:'What is the formula of sodium sulfate?', zh:'硫酸钠的化学式是？' },
+    opts:[ {en:'Na₂SO₄', zh:'Na₂SO₄'}, {en:'NaSO₄', zh:'NaSO₄'}, {en:'Na₂S', zh:'Na₂S'}, {en:'Na(SO₄)₂', zh:'Na(SO₄)₂'} ],
+    ans:0,
+    exp:{ en:'Two Na⁺ (+1 each) balance one SO₄²⁻ (−2): Na₂SO₄.',
+          zh:'两个 Na⁺（各 +1）正好抵消一个 SO₄²⁻（−2）：Na₂SO₄。' } },
+  { q:{ en:'What is the formula of iron(III) chloride?', zh:'氯化铁(Ⅲ)的化学式是？' },
+    opts:[ {en:'FeCl₃', zh:'FeCl₃'}, {en:'FeCl₂', zh:'FeCl₂'}, {en:'Fe₃Cl', zh:'Fe₃Cl'}, {en:'FeCl', zh:'FeCl'} ],
+    ans:0,
+    exp:{ en:'Fe³⁺ needs three Cl⁻ ions to stay neutral: FeCl₃. Do not confuse with iron(II) chloride, FeCl₂.',
+          zh:'一个 Fe³⁺ 需要三个 Cl⁻ 才能电中性：FeCl₃。别和氯化亚铁 FeCl₂ 混淆。' } },
+  { q:{ en:'Which of these is a polyatomic cation?', zh:'下面哪个是多原子阳离子？' },
+    opts:[ {en:'OH⁻', zh:'OH⁻'}, {en:'NH₄⁺', zh:'NH₄⁺'}, {en:'CO₃²⁻', zh:'CO₃²⁻'}, {en:'Cl⁻', zh:'Cl⁻'} ],
+    ans:1,
+    exp:{ en:'NH₄⁺ (ammonium) is made of one N and four H atoms with one positive charge — the only common polyatomic cation.',
+          zh:'铵根 NH₄⁺ 由一个 N 和四个 H 组成、整体带一个正电——最常见的多原子阳离子。' } }
+];
+var quizState = { i:0, done:false };
+
+function renderCaQuiz(){
+  var box = document.getElementById('caQuiz');
+  if (quizState.done){
+    box.innerHTML = '<div class="msg">' + T('完成！3 题已过。可以到上方选模式继续闯关。','Done — 3 questions reviewed. Head to the top to keep playing.')
+      + '</div><button type="button" class="btn ghost" data-action="caRestart">' + T('重测','Retry') + '</button>';
+    return;
+  }
+  var it = CA_QUIZ[quizState.i];
+  var html = '<div class="bar"><span>' + T('考点题','Checkpoint') + ' ' + (quizState.i+1) + ' / ' + CA_QUIZ.length + '</span></div>'
+    + '<div class="qline">' + it.q[lang] + '</div><div>';
+  it.opts.forEach(function(o, idx){
+    html += '<button type="button" class="quizOpt" data-action="caPick" data-idx="' + idx + '">' + o[lang] + '</button>';
+  });
+  html += '</div><div class="fb" id="caFb"></div>'
+    + '<button type="button" class="btn primary hidden" id="caNext" data-action="caNext">' + T('下一题','Next') + ' →</button>';
+  box.innerHTML = html;
+}
+
+/* ---------- actions ---------- */
+function startMode(m){
+  state.mode = m;
+  state.qs = buildQuestions(m);
+  state.qi = 0; state.picked = false; state.score = 0; state.streak = 0; state.correct = 0;
+  state.screen = 'play';
+  renderMain();
+}
+
+function pick(idx){
+  if (state.picked) return;
+  var q = state.qs[state.qi];
+  var chosen = q.opts[idx];
+  var chosenVal = q.mode === 'charge' ? chosen.c : chosen;
+  var ok = q.mode === 'charge' ? chosen.c === q.item.c : chosen.f === q.item.f;
+  state.picked = true;
+  var ex = explain(q, ok ? null : chosenVal, ok);
+  var btns = document.querySelectorAll('#main .opt');
+  btns.forEach(function(b, i){
+    b.disabled = true;
+    var o = q.opts[i];
+    var isOk = q.mode === 'charge' ? o.c === q.item.c : o.f === q.item.f;
+    if (isOk) b.classList.add('ok');
+    else if (i === idx) b.classList.add('no');
+  });
+  var fb = document.getElementById('fb');
+  fb.className = 'fb ' + (ok ? 'good' : 'bad');
+  fb.innerHTML = lang === 'zh' ? ex.zh : ex.en;
+  if (ok){
+    state.streak++;
+    var bonus = Math.min(2 * (state.streak - 1), 10);
+    state.score += 10 + bonus;
+    state.correct++;
+  } else {
+    state.streak = 0;
+  }
+  document.getElementById('nextBtn').classList.remove('hidden');
+  var isLast = state.qi === state.qs.length - 1;
+  document.getElementById('nextBtn').textContent = isLast
+    ? T('查看成绩','See result') + ' 🏁' : T('下一题','Next') + ' →';
+}
+
+function nextQ(){
+  if (state.qi >= state.qs.length - 1){
+    state.screen = 'result';
+  } else {
+    state.qi++; state.picked = false;
+  }
+  renderMain();
+}
+
+document.addEventListener('click', function(ev){
+  var btn = ev.target.closest('[data-action]');
+  if (!btn) return;
+  var a = btn.getAttribute('data-action');
+  if (a === 'start') startMode(btn.getAttribute('data-mode'));
+  else if (a === 'home'){ state.screen = 'home'; renderMain(); }
+  else if (a === 'pick') pick(+btn.getAttribute('data-idx'));
+  else if (a === 'next') nextQ();
+  else if (a === 'caPick'){
+    var idx = +btn.getAttribute('data-idx');
+    var it = CA_QUIZ[quizState.i];
+    var ok = idx === it.ans;
+    var opts = document.querySelectorAll('#caQuiz .quizOpt');
+    opts.forEach(function(b, i){
+      b.disabled = true;
+      if (i === it.ans) b.classList.add('ok');
+      else if (i === idx) b.classList.add('no');
+    });
+    var fb = document.getElementById('caFb');
+    fb.className = 'fb ' + (ok ? 'good' : 'bad');
+    fb.innerHTML = '<b>' + (ok ? T('答对！','Correct!') : T('不对。','Not quite.')) + '</b>' + it.exp[lang];
+    document.getElementById('caNext').classList.remove('hidden');
+  }
+  else if (a === 'caNext'){
+    quizState.i++;
+    if (quizState.i >= CA_QUIZ.length) quizState.done = true;
+    renderCaQuiz();
+  }
+  else if (a === 'caRestart'){ quizState.i = 0; quizState.done = false; renderCaQuiz(); }
+});
+
+/* ---------- boot ---------- */
+function refresh(){
+  document.getElementById('langBtn').textContent = lang === 'zh' ? 'English' : '中文';
+  renderMain();
+  renderCaQuiz();
+}
+document.getElementById('langBtn').addEventListener('click', function(){
+  lang = lang === 'zh' ? 'en' : 'zh';
+  storeLang();
+  refresh();
+});
+renderCheat();
+refresh();
+</script>
+</body>
+</html>
