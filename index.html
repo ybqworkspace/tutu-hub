@@ -42,72 +42,161 @@
     <span class="icon">📚</span>
     <span class="info">
       <span class="title">学科词汇本</span>
-      <span class="desc">计算机 25 · 物理 6 · 化学 10 —— 每次配图/演示自动积累，随时复习</span>
+      <span class="desc">每次配图/演示自动积累，随时复习</span>
     </span>
     <span class="arrow">›</span>
   </a>
 
-  <h2>💻 计算机科学</h2>
-  <a class="card" href="https://ybqworkspace.github.io/tutu-hub/compsci/nn-trainer-demo.html">
-    <span class="icon">🧠</span>
-    <span class="info">
-      <span class="title">神经元训练模拟器</span>
-      <span class="desc">拖权重/目标 → 点训练 → 看误差如何把权重一步步推准（AI 工作原理）</span>
-      <span><span class="tag t-kao">考点级：AI/机器学习基础</span><span class="tag t-link">地学连接：AI 分析地质数据</span></span>
-    </span>
-    <span class="arrow">›</span>
-  </a>
+  <div id="sections"></div>
 
-  <h2>⚡ 物理</h2>
-  <a class="card" href="https://ybqworkspace.github.io/tutu-hub/physics/buoyancy-demo.html">
-    <span class="icon">🌊</span>
-    <span class="info">
-      <span class="title">浮力交互演示</span>
-      <span class="desc">压物体入水 → 看上下表面压力差与浮力（阿基米德原理）</span>
-      <span><span class="tag t-kao">考点级：压力/浮力</span><span class="tag t-link">地学连接：海洋分层与密度流</span></span>
-    </span>
-    <span class="arrow">›</span>
-  </a>
-
-  <h2>🧪 化学</h2>
-  <a class="card" href="https://ybqworkspace.github.io/tutu-hub/chemistry/oxidation-demo.html">
-    <span class="icon">🔥</span>
-    <span class="info">
-      <span class="title">氧化反应分步演示</span>
-      <span class="desc">选反应 → 逐步看氧结合、电子转移、氧化数变化（氧化三重定义）</span>
-      <span><span class="tag t-kao">考点级：氧化还原</span><span class="tag t-link">地学连接：岩石风化与锈蚀</span></span>
-    </span>
-    <span class="arrow">›</span>
-  </a>
-  <a class="card" href="https://ybqworkspace.github.io/tutu-hub/chemistry/ions-game-demo.html">
-    <span class="icon">⚗️</span>
-    <span class="info">
-      <span class="title">IGCSE 常见离子学习游戏</span>
-      <span class="desc">离子速查 + 记忆配对 + 电荷配平写化学式（含考点小测）</span>
-      <span><span class="tag t-kao">考点级：离子符号/电荷/化学式</span><span class="tag t-link">地学连接：矿物=离子化合物</span></span>
-    </span>
-    <span class="arrow">›</span>
-  </a>
-
-  <h2>➗ 数学</h2>
-  <div class="card" style="opacity:.65;cursor:default;">
-    <span class="icon">📐</span>
-    <span class="info">
-      <span class="title">数学演示</span>
-      <span class="desc">即将上线——函数、几何、统计交互演示</span>
-    </span>
-  </div>
-
-  <h2>🎨 艺术与设计</h2>
-  <div class="card" style="opacity:.65;cursor:default;">
-    <span class="icon">🖌️</span>
-    <span class="info">
-      <span class="title">艺术素材</span>
-      <span class="desc">即将上线——过程记录与主题研究引导</span>
-    </span>
-  </div>
-
-  <footer>Tutu 国际教育导师 · 素材集中维护（按学科分目录归档于本库） · 遇到问题随时在群里问</footer>
+  <footer>Tutu 国际教育导师 · 素材集中维护于 tutu-hub · 导航页随每次发布自动更新</footer>
 </div>
+
+<script type="application/json" id="nav-data">
+/*===NAV-DATA-START===*/
+[
+  {
+    "subject": "chemistry",
+    "file": "chemistry/ion-trainer-demo.html",
+    "icon": "🧪",
+    "title": "离子训练营 Ion Lab",
+    "desc": "多模式训练离子符号与电荷，闯关 + 复习小测（含考点小测）",
+    "tags": [
+      {
+        "cls": "t-kao",
+        "label": "考点级：离子符号/电荷/化学式"
+      },
+      {
+        "cls": "t-link",
+        "label": "地学连接：矿物=离子化合物"
+      }
+    ]
+  },
+  {
+    "subject": "chemistry",
+    "file": "chemistry/ions-game-demo.html",
+    "icon": "⚗️",
+    "title": "IGCSE 常见离子学习游戏",
+    "desc": "离子速查 + 记忆配对 + 电荷配平写化学式（含考点小测）",
+    "tags": [
+      {
+        "cls": "t-kao",
+        "label": "考点级：离子符号/电荷/化学式"
+      },
+      {
+        "cls": "t-link",
+        "label": "地学连接：矿物=离子化合物（方解石 CaCO₃）"
+      }
+    ]
+  },
+  {
+    "subject": "chemistry",
+    "file": "chemistry/oxidation-demo.html",
+    "icon": "🔥",
+    "title": "氧化反应分步演示",
+    "desc": "选反应 → 逐步看氧结合、电子转移、氧化数变化（氧化三重定义）",
+    "tags": [
+      {
+        "cls": "t-kao",
+        "label": "考点级：氧化还原"
+      },
+      {
+        "cls": "t-link",
+        "label": "地学连接：岩石风化与锈蚀"
+      }
+    ]
+  },
+  {
+    "subject": "physics",
+    "file": "physics/buoyancy-demo.html",
+    "icon": "🌊",
+    "title": "浮力交互演示",
+    "desc": "压物体入水 → 看上下表面压力差与浮力（阿基米德原理）",
+    "tags": [
+      {
+        "cls": "t-kao",
+        "label": "考点级：压力/浮力"
+      },
+      {
+        "cls": "t-link",
+        "label": "地学连接：海洋分层与密度流"
+      }
+    ]
+  },
+  {
+    "subject": "compsci",
+    "file": "compsci/nn-trainer-demo.html",
+    "icon": "🧠",
+    "title": "神经元训练模拟器",
+    "desc": "拖权重/目标 → 点训练 → 看误差如何把权重一步步推准（AI 工作原理）",
+    "tags": [
+      {
+        "cls": "t-kao",
+        "label": "考点级：AI/机器学习基础"
+      },
+      {
+        "cls": "t-link",
+        "label": "地学连接：AI 分析地质数据"
+      }
+    ]
+  }
+]
+/*===NAV-DATA-END===*/
+</script>
+<script>
+(function(){
+  var SUBJECTS=[
+    {key:"compsci",icon:"💻",name:"计算机科学"},
+    {key:"math",icon:"📐",name:"数学"},
+    {key:"physics",icon:"⚡",name:"物理"},
+    {key:"chemistry",icon:"🧪",name:"化学"},
+    {key:"art",icon:"🖌️",name:"艺术与设计"}
+  ];
+  var raw=document.getElementById('nav-data').textContent.replace(/\/\*===NAV-DATA-START===\*\//,'')
+      .replace(/\/\*===NAV-DATA-END===\*\//,'');
+    var demos=JSON.parse(raw);
+  var bySubj={};
+  demos.forEach(function(d){ (bySubj[d.subject]=bySubj[d.subject]||[]).push(d); });
+  var box=document.getElementById('sections');
+  SUBJECTS.forEach(function(s){
+    var h=document.createElement('h2');
+    h.textContent=s.icon+' '+s.name;
+    box.appendChild(h);
+    var list=bySubj[s.key]||[];
+    if(list.length===0){
+      var ph=document.createElement('div');
+      ph.className='card';
+      ph.style.opacity='.65';
+      ph.style.cursor='default';
+      ph.innerHTML='<span class="icon">'+s.icon+'</span><span class="info"><span class="title">'+s.name+'素材</span><span class="desc">即将上线——交互演示持续制作中</span></span>';
+      box.appendChild(ph);
+    }else{
+      list.forEach(function(d){
+        var a=document.createElement('a');
+        a.className='card';
+        a.href='https://ybqworkspace.github.io/tutu-hub/'+d.file;
+        var icon=document.createElement('span'); icon.className='icon'; icon.textContent=d.icon;
+        var info=document.createElement('span'); info.className='info';
+        var t=document.createElement('span'); t.className='title'; t.textContent=d.title;
+        var ds=document.createElement('span'); ds.className='desc'; ds.textContent=d.desc;
+        info.appendChild(t); info.appendChild(ds);
+        if((d.tags||[]).length){
+          var tg=document.createElement('span');
+          d.tags.forEach(function(x){
+            var sp=document.createElement('span');
+            sp.className='tag '+(x.cls||'t-kao');
+            sp.textContent=x.label;
+            tg.appendChild(sp);
+          });
+          info.appendChild(tg);
+        }
+        var ar=document.createElement('span'); ar.className='arrow'; ar.textContent='›';
+        a.appendChild(icon); a.appendChild(info); a.appendChild(ar);
+        box.appendChild(a);
+      });
+    }
+  });
+})();
+</script>
 </body>
 </html>

@@ -7,10 +7,11 @@
 
 | 学科 | 素材 | 类型 | 级别 | 地学连接 | 仓库 | 链接 |
 |---|---|---|---|---|---|---|
-| 计算机 | 神经网络训练模拟器 | 动态演示 | 考点级（AI/ML 基础） | AI 分析地质数据 | tutu-hub | /compsci/nn-trainer-demo.html |
+| 化学 | 离子训练营 Ion Lab | 动态演示 | 考点级（离子符号/电荷/化学式） | 矿物=离子化合物 | tutu-hub | /chemistry/ion-trainer-demo.html |
+| 计算机 | 神经元训练模拟器 | 动态演示 | 考点级（AI/机器学习基础） | AI 分析地质数据 | tutu-hub | /compsci/nn-trainer-demo.html |
 | 物理 | 浮力交互演示 | 动态演示 | 考点级（压力/浮力） | 海洋分层与密度流 | tutu-hub | /physics/buoyancy-demo.html |
 | 化学 | 氧化反应分步演示 | 动态演示 | 考点级（氧化还原） | 岩石风化与锈蚀 | tutu-hub | /chemistry/oxidation-demo.html |
-| 化学 | IGCSE 常见离子学习游戏（配对+电荷配平写化学式） | 交互游戏 | 考点级（离子符号/电荷/化学式） | 矿物=离子化合物（方解石 CaCO₃） | tutu-hub | /chemistry/ions-game-demo.html |
+| 化学 | IGCSE 常见离子学习游戏 | 动态演示 | 考点级（离子符号/电荷/化学式） | 矿物=离子化合物（方解石 CaCO₃） | tutu-hub | /chemistry/ions-game-demo.html |
 | 计算机 | 神经网络原理图 | 静态配图 | 拓展级→考点桥梁 | — | （本地 diagrams/） | nn-mechanism.png |
 | 词汇 | 学科词汇本 | 文档 | — | — | tutu-hub | /vocabulary/glossary.md |
 
