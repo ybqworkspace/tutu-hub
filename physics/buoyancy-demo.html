@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>浮力交互演示 Buoyancy Demo</title>
+<style>
+  :root{--blue:#2f6fed;--green:#1fa86c;--orange:#f59e0b;--red:#ef4444;--ink:#1f2937;--mut:#6b7280;--line:#e5e7eb;}
+  *{box-sizing:border-box;font-family:"PingFang SC","Microsoft YaHei",system-ui,sans-serif;}
+  body{margin:0;background:#fff;color:var(--ink);}
+  .wrap{max-width:780px;margin:0 auto;padding:14px;}
+  h1{font-size:18px;margin:2px 0 2px;}
+  .sub{color:var(--mut);font-size:12px;margin-bottom:10px;}
+  .cards{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  @media(max-width:640px){.cards{grid-template-columns:1fr;}}
+  .card{border:1px solid var(--line);border-radius:10px;padding:12px;}
+  .card h2{font-size:13px;margin:0 0 8px;color:#374151;}
+  .slider-row{margin-bottom:10px;font-size:13px;}
+  .slider-row label{display:flex;justify-content:space-between;}
+  input[type=range]{width:100%;accent-color:var(--blue);margin:2px 0 0;}
+  .big{font-size:15px;font-weight:700;}
+  .formula{background:#f8fafc;border:1px solid var(--line);border-radius:8px;padding:8px;font-size:12.5px;line-height:1.7;margin-bottom:6px;white-space:pre-line;}
+  .kv{display:flex;justify-content:space-between;font-size:13px;margin:3px 0;}
+  .bar{height:10px;background:#eef2f7;border-radius:5px;overflow:hidden;margin:2px 0 6px;}
+  .bar>i{display:block;height:100%;transition:width .25s;}
+  .fb{background:var(--blue);} .fw{background:var(--red);}
+  .status{font-size:12.5px;color:var(--mut);margin-top:8px;min-height:44px;line-height:1.55;}
+  .tag{display:inline-block;margin-top:8px;font-size:11px;background:#fff7e6;color:#b45309;border:1px solid #fde68a;border-radius:20px;padding:3px 10px;}
+  .tag.gray{background:#f1f5f9;color:#64748b;border-color:#e2e8f0;}
+  svg{display:block;width:100%;height:auto;margin-top:10px;border:1px solid var(--line);border-radius:10px;background:#fcfdff;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+    <h1 style="margin:0;">浮力交互演示 <span style="font-size:12px;color:var(--mut);font-weight:400">Buoyancy / Upthrust Demo</span></h1>
+    <button id="langBtn" class="tag" style="cursor:pointer;border:1px solid var(--line);white-space:nowrap;flex-shrink:0;background:#fff;color:var(--ink);">EN 🇬🇧</button>
+  </div>
+  <div class="sub" data-en="How to play: drag the top-surface depth to push the cube into water, watch how the pressure difference and buoyancy change; then try other liquid/object densities and predict sink or float.">玩法：拖动「上表面深度」把物体压入水中 → 观察上下表面压力与浮力如何变化 → 再试液体密度、物体密度，预测上浮还是下沉。</div>
+  <div class="cards">
+    <div class="card"><h2 data-en="① Controls">① 控件区 Controls</h2>
+      <div class="slider-row"><label>上表面深度 d（水面下，可为负=在水面上）<span class="big" id="dV">0.20 m</span></label><input type="range" id="d" min="-0.10" max="0.50" step="0.01" value="0.20"></div>
+      <div class="slider-row"><label>正方体边长 a <span class="big" id="aV">0.10 m</span></label><input type="range" id="a" min="0.05" max="0.30" step="0.01" value="0.10"></div>
+      <div class="slider-row"><label>液体密度 ρ<sub>液</sub> <span class="big" id="rlV">1000 kg/m³</span></label><input type="range" id="rl" min="500" max="1500" step="25" value="1000"></div>
+      <div class="slider-row"><label>物体密度 ρ<sub>物</sub> <span class="big" id="roV">800 kg/m³</span></label><input type="range" id="ro" min="100" max="3000" step="50" value="800"></div>
+      <div class="formula" id="formula">—</div>
+    </div>
+    <div class="card"><h2 data-en="② Output">② 结果区 Output</h2>
+      <div class="kv"><span data-en="Buoyancy F (upward, upthrust)">浮力 F<sub>浮</sub>（向上，upthrust）</span><span class="big" id="fb" style="color:var(--blue)">—</span></div>
+      <div class="bar"><i id="fbBar" class="fb" style="width:0%"></i></div>
+      <div class="kv"><span data-en="Weight G (downward)">重力 G（向下，weight）</span><span class="big" id="fw" style="color:var(--red)">—</span></div>
+      <div class="bar"><i id="fwBar" class="fw" style="width:0%"></i></div>
+      <div class="kv"><span data-en="Net force (F − G)">合力（F<sub>浮</sub> − G）</span><span class="big" id="net">—</span></div>
+      <div class="status" id="st">初始引导…</div>
+    </div>
+  </div>
+  <svg id="vis" viewBox="0 0 700 310" role="img" aria-label="buoyancy visualization"></svg>
+  <div id="tags"></div>
+</div>
+<script>
+(function(){
+  var G0 = 10; // g = 10 N/kg
+  var lang = 'en';  // 默认英文（国际课程），可切中文
+  var zhText = {};
+  var zhCounter = 0;
+  function collectZh(){
+    document.querySelectorAll('[data-en]').forEach(function(node){
+      if (!node.dataset.zhk){ node.dataset.zhk = 'n'+(zhCounter++); zhText[node.dataset.zhk] = node.innerHTML; }
+    });
+  }
+  function setLang(l){
+    lang = l;
+    collectZh();
+    document.querySelectorAll('[data-en]').forEach(function(node){
+      node.innerHTML = (l === 'en') ? node.getAttribute('data-en') : zhText[node.dataset.zhk];
+    });
+    if (window.quizSetLang) window.quizSetLang(l); // 小测跟随主语言切换
+    document.getElementById('langBtn').textContent = (l === 'zh') ? 'EN 🇬🇧' : '中文';
+    render();
+  }
+  function t(zh, en){ return (lang === 'en') ? en : zh; }
+
+  var el = {
+    d: document.getElementById('d'), a: document.getElementById('a'),
+    rl: document.getElementById('rl'), ro: document.getElementById('ro'),
+    dV: document.getElementById('dV'), aV: document.getElementById('aV'),
+    rlV: document.getElementById('rlV'), roV: document.getElementById('roV'),
+    formula: document.getElementById('formula'),
+    fb: document.getElementById('fb'), fw: document.getElementById('fw'), net: document.getElementById('net'),
+    fbBar: document.getElementById('fbBar'), fwBar: document.getElementById('fwBar'),
+    st: document.getElementById('st'), vis: document.getElementById('vis'),
+    tags: document.getElementById('tags')
+  };
+  function gv(id){ return parseFloat(el[id].value); }
+  function f1(x){ return (Math.round(x*10)/10).toFixed(1); }
+  function clamp(v,lo,hi){ return Math.max(lo, Math.min(hi, v)); }
+
+  function arrowV(x,y1,y2,color,width){
+    // 竖直箭头：从 (x, y1) 指向 (x, y2)，箭头画在终点 y2
+    var s = '<line x1="'+x+'" y1="'+y1+'" x2="'+x+'" y2="'+y2+'" stroke="'+color+'" stroke-width="'+width+'"/>';
+    var dir = y2>y1 ? 1 : -1;
+    s += '<polygon points="'+(x-5)+','+(y2-7*dir)+' '+(x+5)+','+(y2-7*dir)+' '+x+','+y2+'" fill="'+color+'"/>';
+    return s;
+  }
+  function harrow(x,y,dir,len,color){
+    // 水平箭头，dir=1 向右
+    var x2 = x + dir*len;
+    var s = '<line x1="'+x+'" y1="'+y+'" x2="'+x2+'" y2="'+y+'" stroke="'+color+'" stroke-width="3"/>';
+    s += '<polygon points="'+(x2-7*dir)+','+(y-5)+' '+(x2-7*dir)+','+(y+5)+' '+x2+','+y+'" fill="'+color+'"/>';
+    return s;
+  }
+
+  function render(msg){
+    var d = gv('d'), a = gv('a'), rl = gv('rl'), ro = gv('ro');
+    var A = a*a, V = a*a*a;
+    var hSub = clamp(d + a, 0, a);            // 浸入高度
+    var Vd = A * hSub;                         // 排开液体体积
+    var pTop = d > 0 ? rl*G0*d : 0;            // 上表面压强
+    var pBot = (d+a) > 0 ? rl*G0*(d+a) : 0;    // 下表面压强
+    var Ftop = pTop * A, Fbot = pBot * A;      // 上下表面压力
+    var Fb = rl * G0 * Vd;                     // 浮力
+    var W = ro * G0 * V;                       // 重力
+    var net = Fb - W;
+
+    el.dV.textContent = d.toFixed(2)+' m';
+    el.aV.textContent = a.toFixed(2)+' m';
+    el.rlV.textContent = rl+' kg/m³';
+    el.roV.textContent = ro+' kg/m³';
+
+    el.formula.textContent = t(
+      '上表面压强 p=ρgh = '+Math.round(pTop)+' Pa → 向下压力 '+f1(Ftop)+' N\n下表面压强 p=ρgh = '+Math.round(pBot)+' Pa → 向上压力 '+f1(Fbot)+' N\n浮力 = 压力差 = '+f1(Fbot)+' − '+f1(Ftop)+' = '+f1(Fb)+' N\n验证：ρ液·g·V排 = '+f1(Fb)+' N（阿基米德原理）\n重力 G = ρ物·g·V = '+f1(W)+' N',
+      'Pressure top p=ρgh = '+Math.round(pTop)+' Pa → downward force '+f1(Ftop)+' N\nPressure bottom p=ρgh = '+Math.round(pBot)+' Pa → upward force '+f1(Fbot)+' N\nBuoyancy = pressure diff = '+f1(Fbot)+' − '+f1(Ftop)+' = '+f1(Fb)+' N\nCheck: ρ·g·V_displaced = '+f1(Fb)+' N (Archimedes)\nWeight G = ρ_obj·g·V = '+f1(W)+' N');
+
+    el.fb.textContent = f1(Fb)+' N';
+    el.fw.textContent = f1(W)+' N';
+    el.net.textContent = (net>=0?'+':'')+f1(net)+' N';
+    el.net.style.color = net>0.05 ? 'var(--blue)' : (net<-0.05 ? 'var(--red)' : 'var(--green)');
+    var m = Math.max(Fb, W, 0.001);
+    el.fbBar.style.width = (Fb/m*100)+'%';
+    el.fwBar.style.width = (W/m*100)+'%';
+
+    // ---- 状态行：为什么 ----
+    var why;
+    if (hSub <= 0){ why = t('物体完全在水面上：没有排开水（V排=0）→ 不受浮力。','Object fully above water: nothing displaced (V=0) → no buoyancy.'); }
+    else if (d < 0){ why = t('部分浸入：压得越深，排开的水越多（V排变大）→ 浮力变大。','Partially submerged: deeper = more water displaced → bigger buoyancy.'); }
+    else { why = t('完全浸没：排开的水已达到物体体积，再往下压 V排 不变 → 浮力不变。浮力与深度无关！','Fully submerged: displaced volume is fixed, so buoyancy stays constant. Depth does NOT matter!'); }
+    var cmp;
+    if (net > 0.05){ cmp = t(' 现在 F浮 > G：松手会上浮，最终漂浮（漂浮时 F浮 = G）。',' Now F > G: it will rise and finally float (floating means F = G).'); }
+    else if (net < -0.05){ cmp = t(' 现在 F浮 < G：松手会下沉。',' Now F < G: it will sink.'); }
+    else { cmp = t(' 现在 F浮 ≈ G：可以悬浮在液体中。',' Now F ≈ G: it can hover (suspend) in the liquid.'); }
+    el.st.textContent = (msg ? msg + ' ' : '') + why + cmp;
+
+    // ---- SVG 绘制 ----
+    var S = 250, wy = 42, cx = 350;            // 比例 250px/m，水面 y，立方体中心 x
+    var topY = wy + d*S, side = a*S;
+    var botY = topY + side;
+    var tankL = 150, tankR = 550, tankB = wy + 0.92*S;
+    var s = '';
+    // 水体（只画水面以下）
+    s += '<rect x="'+tankL+'" y="'+wy+'" width="'+(tankR-tankL)+'" height="'+(tankB-wy)+'" fill="#e8f2fd"/>';
+    // 缸体
+    s += '<path d="M '+tankL+' '+(wy-14)+' L '+tankL+' '+tankB+' L '+tankR+' '+tankB+' L '+tankR+' '+(wy-14)+'" fill="none" stroke="#94a3b8" stroke-width="3"/>';
+    // 水面线
+    s += '<line x1="'+(tankL-10)+'" y1="'+wy+'" x2="'+(tankR+10)+'" y2="'+wy+'" stroke="#2f6fed" stroke-width="2"/>';
+    s += '<text x="'+(tankR+14)+'" y="'+(wy+4)+'" font-size="11" fill="#2f6fed">' + t('水面 0 m','surface 0 m') + '</text>';
+    // 深度刻度
+    for (var k=1; k<=8; k++){
+      var yy = wy + k*0.1*S;
+      if (yy > tankB-4) break;
+      s += '<line x1="'+tankL+'" y1="'+yy+'" x2="'+(tankL+8)+'" y2="'+yy+'" stroke="#94a3b8" stroke-width="1.5"/>';
+      s += '<text x="'+(tankL-34)+'" y="'+(yy+4)+'" font-size="10" fill="#94a3b8">'+(k/10).toFixed(1)+' m</text>';
+    }
+    // 立方体
+    var cFill = ro < rl ? '#fde68a' : (ro === rl ? '#d1fae5' : '#fecaca');
+    s += '<rect x="'+(cx-side/2)+'" y="'+topY+'" width="'+side+'" height="'+side+'" fill="'+cFill+'" stroke="#475569" stroke-width="2" rx="3"/>';
+    s += '<text x="'+cx+'" y="'+(topY+side/2+4)+'" font-size="11" text-anchor="middle" fill="#334155">'+a.toFixed(2)+' m</text>';
+    // 侧面压力（中点深度处，向内）
+    var midY = clamp(topY+side/2, wy, tankB);
+    if (hSub > 0 && d < tankB/S){
+      s += harrow(cx-side/2-30, midY, 1, 22, '#1fa86c');
+      s += harrow(cx+side/2+30, midY, -1, 22, '#1fa86c');
+      s += '<text x="'+(cx+side/2+38)+'" y="'+(midY-8)+'" font-size="11" fill="#1fa86c">' + t('侧面压力','side pressure') + '</text>';
+      s += '<text x="'+(cx+side/2+38)+'" y="'+(midY+6)+'" font-size="11" fill="#1fa86c">' + t('互相抵消','cancel out') + '</text>';
+    }
+    // 上表面向下压力（橙色）
+    if (Ftop > 0.01){
+      var lt = clamp(10 + Ftop*2.2, 12, 70);
+      s += arrowV(cx, topY-lt, topY, '#f59e0b', 4);
+      s += '<text x="'+(cx+10)+'" y="'+(topY-lt-4)+'" font-size="11" fill="#b45309">F上='+f1(Ftop)+' N↓</text>';
+    }
+    // 下表面向上压力（橙色）
+    if (Fbot > 0.01){
+      var lb = clamp(10 + Fbot*2.2, 12, 70);
+      s += arrowV(cx, botY+lb, botY, '#f59e0b', 4);
+      s += '<text x="'+(cx+10)+'" y="'+(botY+lb+12)+'" font-size="11" fill="#b45309">F下='+f1(Fbot)+' N↑</text>';
+    }
+    // 浮力（蓝色大箭头，画在左侧）
+    if (Fb > 0.01){
+      var lfb = clamp(14 + Fb*0.35, 16, 85);
+      s += arrowV(cx-side/2-58, topY+side/2+lfb/2, topY+side/2-lfb/2, '#2f6fed', 6);
+      s += '<text x="'+(cx-side/2-64)+'" y="'+(topY+side/2-lfb/2-8)+'" font-size="12" font-weight="bold" text-anchor="end" fill="#2f6fed">F浮='+f1(Fb)+' N</text>';
+    }
+    // 重力（红色箭头，从中心向下，画在右侧）
+    var lw = clamp(14 + W*0.35, 16, 85);
+    s += arrowV(cx+side/2+58, topY+side/2-lw/2, topY+side/2+lw/2, '#ef4444', 6);
+    s += '<text x="'+(cx+side/2+64)+'" y="'+(topY+side/2+lw/2+14)+'" font-size="12" font-weight="bold" fill="#ef4444">G='+f1(W)+' N</text>';
+    // 液体密度标注
+    s += '<text x="'+(tankL+8)+'" y="'+(wy+18)+'" font-size="11" fill="#475569">ρ液 = '+rl+' kg/m³</text>';
+    el.vis.innerHTML = s;
+
+    // ---- 标签 ----
+    var t1 = t('考点：F浮 = ρ液·g·V排（阿基米德原理）；浮沉条件比较 F浮 与 G。','IGCSE: F = ρ·g·V_displaced (Archimedes); sink/float by comparing F with G.');
+    var t2 = t('易错点：完全浸没后，浮力与深度无关 —— 你正在验证它！','Watch out: once fully submerged, buoyancy is independent of depth — you are verifying it!');
+    var tags = '<span class="tag gray">' + t1 + '</span>';
+    if (d >= 0 && hSub > 0){
+      tags += '<br><span class="tag">' + t2 + '</span>';
+    }
+    el.tags.innerHTML = tags;
+  }
+
+  el.d.addEventListener('input', function(){ render(); });
+  el.a.addEventListener('input', function(){ render(t('边长变大 → 体积和底面积都变大。','Side length up → volume and base area both grow.')); });
+  el.rl.addEventListener('input', function(){ render(t('液体密度变大 → 同样的 V排 产生更大浮力（死海能躺人就是这个道理）。','Denser liquid → same displaced volume gives bigger buoyancy (that is why you float in the Dead Sea).')); });
+  el.ro.addEventListener('input', function(){ render(t('物体密度改变重力，但不改变浮力 —— 浮沉由 F浮 与 G 的比较决定。','Object density changes weight, not buoyancy — sink/float depends on F vs G.')); });
+  document.getElementById('langBtn').addEventListener('click', function(){ setLang(lang === 'zh' ? 'en' : 'zh'); });
+  setLang('en'); // 先应用英文到全部静态标签并刷新（默认英文界面）
+  render(t('试试把「上表面深度」从 -0.1 慢慢拖到 0.3：浮力先变大，完全浸没后就不变了。','Try dragging top-surface depth from -0.1 to 0.3 slowly: buoyancy grows first, then stops changing once fully submerged.'));
+})();
+</script>
+
+
+<div class="qzwrap" style="border:1px solid var(--line);border-radius:12px;padding:14px;margin-top:14px;background:#fff;">
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+    <h2 style="font-size:15px;margin:0 0 6px;">🎯 考点小测 <span style="font-size:11px;color:var(--mut);font-weight:400">Quiz · IGCSE/A-Level</span></h2>
+    <span id="qzScore" style="font-size:12px;color:var(--mut);font-weight:700;">—</span>
+  </div>
+  <div id="qzBody" style="font-size:13px;line-height:1.6;"></div>
+</div>
+<script>
+(function(){
+  var QUIZ = [{"ans": 2, "zh": {"q": "物体完全浸没在水中后继续往深处压，浮力会怎样变化？（液体密度不变）", "opts": ["变大", "变小", "不变", "先变大后变小"], "exp": "完全浸没后 V排 = 物体体积不再变，F浮 = ρ液gV排 与深度无关——最大易错点。演示里把物体完全压入后浮力就停住不变。", "note": "浮力与深度"}, "en": {"q": "An object is fully submerged. It is pushed deeper (liquid density unchanged). How does the buoyancy change?", "opts": ["It increases", "It decreases", "It stays the same", "It increases then decreases"], "exp": "Once fully submerged, V_displaced = the object's volume, so F = ρ·g·V stays constant — depth does NOT matter. In the demo, buoyancy stops changing once the cube is fully under.", "note": "Buoyancy vs depth"}}, {"ans": 1, "zh": {"q": "边长 0.1 m 的立方体完全浸没水中（ρ=1000 kg/m³，g=10 N/kg）。浮力约为多少？", "opts": ["1 N", "10 N", "100 N", "0.1 N"], "exp": "V = 0.1³ = 0.001 m³；F浮 = ρgV = 1000×10×0.001 = 10 N。阿基米德原理 F浮 = ρ液gV排。", "note": "阿基米德计算"}, "en": {"q": "A 0.1 m cube is fully submerged in water (ρ=1000 kg/m³, g=10 N/kg). What is the buoyant force?", "opts": ["1 N", "10 N", "100 N", "0.1 N"], "exp": "V = 0.1³ = 0.001 m³; F = ρgV = 1000×10×0.001 = 10 N. Archimedes: F = ρ·g·V_displaced.", "note": "Archimedes calc"}}, {"ans": 1, "zh": {"q": "密度 900 kg/m³ 的木头放入水中（ρ水=1000 kg/m³），松手后会？", "opts": ["下沉到底", "上浮并最终漂浮", "刚好悬浮", "无法判断"], "exp": "物体密度 < 液体密度 → 上浮直到漂浮（漂浮时 F浮 = G，V排 < V物）。密度比较是浮沉快捷判据。", "note": "浮沉条件"}, "en": {"q": "A block of density 900 kg/m³ is released in water (1000 kg/m³). What happens?", "opts": ["It sinks to the bottom", "It rises and finally floats", "It hovers exactly in the middle", "Cannot tell"], "exp": "Object density < liquid density → it rises and floats (floating means F = G with V_displaced < V_object). Comparing densities is the quick rule for sink/float.", "note": "Sink or float"}}];
+  var qzlang = 'en';          // 默认英文（与主界面一致）
+  var qi = 0, correct = 0, answered = false;
+  var body = document.getElementById('qzBody');
+  var score = document.getElementById('qzScore');
+  function cur(it){ return qzlang === 'en' ? it.en : it.zh; }
+  function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function pick(zh, en){ return qzlang === 'en' ? en : zh; }
+  function show(){
+    if (qi >= QUIZ.length){ end(); return; }
+    var it = QUIZ[qi], c = cur(it);
+    answered = false;
+    score.textContent = correct + ' / ' + QUIZ.length;
+    var h = '<div style="margin-bottom:6px;"><b>' + esc(c.q) + '</b></div>';
+    if (c.note){ h += '<div style="font-size:11px;color:var(--mut);margin-bottom:6px;">' + pick('考点：','Topic: ') + esc(c.note) + '</div>'; }
+    c.opts.forEach(function(o, i){
+      h += '<button data-i="'+i+'" style="display:block;width:100%;text-align:left;margin:4px 0;padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:#f8fafc;font-size:13px;cursor:pointer;font-family:inherit;">' + esc(o) + '</button>';
+    });
+    h += '<div id="qzExp" style="margin-top:8px;min-height:20px;"></div>';
+    h += '<div style="margin-top:8px;"><button id="qzNext" style="border:0;border-radius:7px;padding:6px 14px;font-size:13px;cursor:pointer;background:var(--blue);color:#fff;font-family:inherit;">' + (qi === QUIZ.length-1 ? pick('查看结果','See result') : pick('下一题','Next')) + '</button></div>';
+    body.innerHTML = h;
+    body.querySelectorAll('button[data-i]').forEach(function(b){
+      b.addEventListener('click', function(){
+        if (answered) return;
+        answered = true;
+        var idx = parseInt(b.dataset.i, 10);
+        var ok = (idx === it.ans);
+        if (ok) correct++;
+        body.querySelectorAll('button[data-i]').forEach(function(x, j){
+          var jj = parseInt(x.dataset.i, 10);
+          if (jj === it.ans){ x.style.borderColor = 'var(--green)'; x.style.background = '#dcfce7'; }
+          else if (jj === idx){ x.style.borderColor = 'var(--red)'; x.style.background = '#fee2e2'; }
+          x.disabled = true;
+        });
+        var exp = document.getElementById('qzExp');
+        exp.innerHTML = (ok ? (qzlang==='en'?'✅ Correct!':'✅ 答对！') : (qzlang==='en'?'❌ Wrong. Correct answer: ':'❌ 答错。正确答案：') + esc(c.opts[it.ans]) + (qzlang==='en'?'.': '。')) + '<br>' + esc(c.exp);
+        score.textContent = correct + ' / ' + QUIZ.length;
+      });
+    });
+    document.getElementById('qzNext').addEventListener('click', function(){ qi++; show(); });
+  }
+  function end(){
+    score.textContent = correct + ' / ' + QUIZ.length;
+    var pct = Math.round(correct / QUIZ.length * 100);
+    var msg = pct === 100 ? pick('🎉 全对！概念很扎实。','🎉 Perfect! Solid understanding.') : pct >= 67 ? pick('👍 不错！再看一眼错题解析。','👍 Good! Review the explanations of any wrong ones.') : pick('💪 建议回到上面演示重玩一遍，再回来测。','💪 Replay the demo above, then try again.');
+    body.innerHTML = '<div style="font-size:15px;font-weight:700;margin-bottom:6px;">' + pick('测试完成：','Quiz done: ') + correct + ' / ' + QUIZ.length + ' (' + pct + '%)</div><div>' + msg + '</div><div style="margin-top:10px;"><button id="qzRestart" style="border:0;border-radius:7px;padding:6px 14px;font-size:13px;cursor:pointer;background:var(--green);color:#fff;font-family:inherit;">' + pick('再测一次','Retry') + '</button></div>';
+    document.getElementById('qzRestart').addEventListener('click', function(){ qi = 0; correct = 0; show(); });
+  }
+  function setQzLang(l){ qzlang = l; if (qi < QUIZ.length){ show(); } }
+  window.quizSetLang = setQzLang;   // 供主 setLang 联动
+  show();
+})();
+</script>
+
+</body>
+</html>

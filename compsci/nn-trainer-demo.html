@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>单个神经元如何学习 — 交互演示</title>
+<style>
+  :root{--blue:#2f6fed;--green:#1fa86c;--orange:#f59e0b;--red:#ef4444;--ink:#1f2937;--mut:#6b7280;--line:#e5e7eb;}
+  *{box-sizing:border-box;font-family:"PingFang SC","Microsoft YaHei",system-ui,sans-serif;}
+  body{margin:0;background:#fff;color:var(--ink);}
+  .wrap{max-width:780px;margin:0 auto;padding:14px;}
+  h1{font-size:18px;margin:2px 0 2px;}
+  .sub{color:var(--mut);font-size:12px;margin-bottom:10px;}
+  .cards{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  @media(max-width:640px){.cards{grid-template-columns:1fr;}}
+  .card{border:1px solid var(--line);border-radius:10px;padding:12px;}
+  .card h2{font-size:13px;margin:0 0 8px;color:#374151;}
+  .slider-row{margin-bottom:10px;font-size:13px;}
+  .slider-row label{display:flex;justify-content:space-between;}
+  input[type=range]{width:100%;accent-color:var(--blue);margin:2px 0 0;}
+  .big{font-size:15px;font-weight:700;}
+  .formula{background:#f8fafc;border:1px solid var(--line);border-radius:8px;padding:8px;font-size:13px;line-height:1.7;margin-bottom:6px;}
+  .err{font-variant-numeric:tabular-nums;}
+  .bar{height:10px;background:#eef2f7;border-radius:5px;overflow:hidden;margin:4px 0 2px;}
+  .bar>i{display:block;height:100%;background:var(--red);transition:width .25s;}
+  .btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;}
+  button{border:0;border-radius:7px;padding:7px 12px;font-size:13px;cursor:pointer;font-family:inherit;}
+  .b1{background:var(--blue);color:#fff;}
+  .b2{background:var(--green);color:#fff;}
+  .b3{background:#f1f5f9;color:#374151;}
+  .status{font-size:12px;color:var(--mut);margin-top:8px;min-height:32px;line-height:1.5;}
+  .tag{display:inline-block;margin-top:8px;font-size:11px;background:#fff7e6;color:#b45309;border:1px solid #fde68a;border-radius:20px;padding:3px 10px;}
+  svg{display:block;width:100%;height:auto;margin-top:10px;border:1px solid var(--line);border-radius:10px;background:#fcfdff;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+    <h1 style="margin:0;">单个神经元如何学习 <span style="font-size:12px;color:var(--mut);font-weight:400">Single Neuron Learns</span></h1>
+    <button id="langBtn" class="b3" style="white-space:nowrap;flex-shrink:0;">EN 🇬🇧</button>
+  </div>
+  <div class="sub" data-en="Drag the sliders to change weights or target, then press TRAIN to watch the error push the weights into place.">拖滑杆改权重或目标 → 看输出与误差变化；点「训练」→ 看误差(error)如何一步步把权重(weights)推准 ✏️</div>
+
+  <div class="cards">
+    <div class="card">
+      <h2 data-en="① Inputs, weights &amp; target">① 输入、权重与目标</h2>
+      <div class="slider-row">
+        <label>w₁ <span data-en="weight 1">权重 1</span> <span class="big" id="w1v">0.50</span></label>
+        <input type="range" id="w1" min="0" max="1.5" step="0.01" value="0.5">
+      </div>
+      <div class="slider-row">
+        <label>w₂ <span data-en="weight 2">权重 2</span> <span class="big" id="w2v">0.30</span></label>
+        <input type="range" id="w2" min="0" max="1.5" step="0.01" value="0.3">
+      </div>
+      <div class="slider-row">
+        <label>t <span data-en="target (correct answer)">正确答案 target</span> <span class="big" id="tv">3.00</span></label>
+        <input type="range" id="t" min="1" max="5" step="0.1" value="3">
+      </div>
+      <div class="slider-row" style="color:var(--mut)" data-en="Fixed inputs: x₁ = 2, x₂ = 1">固定输入 fixed inputs：x₁ = 2，x₂ = 1</div>
+      <div class="formula" id="formula">加权和 = —</div>
+    </div>
+
+    <div class="card">
+      <h2 data-en="② Trainer">② 训练模拟器 Trainer</h2>
+      <div class="big" id="out">输出 y = —</div>
+      <div style="font-size:13px;margin:6px 0 2px">误差 error = t − y：<b class="err" id="err">—</b></div>
+      <div class="bar"><i id="ebar" style="width:0%"></i></div>
+      <div class="btns">
+        <button class="b1" id="s1" data-en="Train 1 step">训练 1 步</button>
+        <button class="b2" id="s20" data-en="Train 20 steps">训练 20 步</button>
+        <button class="b3" id="rs" data-en="Reset">重置</button>
+      </div>
+      <div style="font-size:12px;color:var(--mut);margin-top:6px" id="metaLine">轮次 epoch：<b id="ep">0</b> ｜ 学习率 learning rate = 0.12 ｜ 更新式：w ← w + lr × error × x</div>
+      <div class="status" id="st">试玩：把目标 t 拖到 4.0，再连点「训练 1 步」，观察 w 怎么被误差推着变大。</div>
+    </div>
+  </div>
+
+  <svg id="netsvg" viewBox="0 0 700 130" role="img" aria-label="neuron diagram"></svg>
+  <div class="tag" data-en="IGCSE: inputs × weights → sum → output; error drives weight updates, repeated until output approaches target = learning from data">IGCSE 考点：输入×权重 → 求和 → 输出；误差(error)驱动权重(weights)调整，反复多次后输出逼近目标 = 从数据中学习 learn from data</div>
+</div>
+
+<script>
+(function(){
+  var X1 = 2, X2 = 1, LR = 0.12, epoch = 0, training = false;
+  var el = {
+    w1: document.getElementById('w1'), w2: document.getElementById('w2'), t: document.getElementById('t'),
+    w1v: document.getElementById('w1v'), w2v: document.getElementById('w2v'), tv: document.getElementById('tv'),
+    formula: document.getElementById('formula'), out: document.getElementById('out'),
+    err: document.getElementById('err'), ebar: document.getElementById('ebar'),
+    ep: document.getElementById('ep'), st: document.getElementById('st'),
+    svg: document.getElementById('netsvg'),
+    s1: document.getElementById('s1'), s20: document.getElementById('s20'), rs: document.getElementById('rs')
+  };
+
+  function getV(id){ return parseFloat(el[id].value); }
+  function clamp(x, lo, hi){ return Math.min(hi, Math.max(lo, x)); }
+  function fmt(x){ return x.toFixed(2); }
+
+  // ---- 语言切换（P1-3：EN 模式）----
+  var lang = 'en';  // 默认英文（国际课程），可切中文
+  var zhText = {}; // 按 data-zhk 存中文原文
+  var zhCounter = 0;
+  function collectZh(){
+    document.querySelectorAll('[data-en]').forEach(function(node){
+      if (!node.dataset.zhk){
+        node.dataset.zhk = 'n' + (zhCounter++);
+        zhText[node.dataset.zhk] = node.innerHTML;
+      }
+    });
+  }
+  function setLang(l){
+    lang = l;
+    collectZh();
+    document.querySelectorAll('[data-en]').forEach(function(node){
+      node.innerHTML = (l === 'en') ? node.getAttribute('data-en') : zhText[node.dataset.zhk];
+    });
+    var epParent = el.ep.parentNode;
+    epParent.innerHTML = (l === 'en')
+      ? 'Epoch: <b id="ep">' + epoch + '</b> ｜ learning rate = 0.12 ｜ update: w ← w + lr × error × x'
+      : '轮次 epoch：<b id="ep">' + epoch + '</b> ｜ 学习率 learning rate = 0.12 ｜ 更新式：w ← w + lr × error × x';
+    el.ep = document.getElementById('ep');
+    if (window.quizSetLang) window.quizSetLang(l); // 小测跟随主语言切换
+    document.getElementById('langBtn').textContent = (l === 'zh') ? 'EN 🇬🇧' : '中文';
+    render('');
+  }
+  // 动态消息双语：中文为主，英文模式时末尾附译文
+  function msg(zh, en){
+    return (lang === 'en' && en) ? en : zh;
+  }
+
+  function drawSvg(w1, w2, y, t){
+    var s = '';
+    // inputs
+    s += '<circle cx="70" cy="40" r="17" fill="#dbeafe" stroke="#2f6fed" stroke-width="2"/>';
+    s += '<text x="70" y="44" text-anchor="middle" font-size="12" fill="#1e3a8a">x₁=2</text>';
+    s += '<circle cx="70" cy="92" r="17" fill="#dbeafe" stroke="#2f6fed" stroke-width="2"/>';
+    s += '<text x="70" y="96" text-anchor="middle" font-size="12" fill="#1e3a8a">x₂=1</text>';
+    // connections with weights
+    s += '<line x1="87" y1="43" x2="250" y2="58" stroke="#93c5fd" stroke-width="2"/>';
+    s += '<line x1="87" y1="89" x2="250" y2="74" stroke="#93c5fd" stroke-width="2"/>';
+    s += '<text x="168" y="42" text-anchor="middle" font-size="12" fill="#1d4ed8">w₁=' + fmt(w1) + '</text>';
+    s += '<text x="168" y="98" text-anchor="middle" font-size="12" fill="#1d4ed8">w₂=' + fmt(w2) + '</text>';
+    // neuron
+    s += '<circle cx="295" cy="66" r="42" fill="#eaf1ff" stroke="#2f6fed" stroke-width="2.5"/>';
+    s += '<text x="295" y="62" text-anchor="middle" font-size="14" font-weight="bold" fill="#1e3a8a">Σ</text>';
+    s += '<text x="295" y="82" text-anchor="middle" font-size="10" fill="#1e3a8a">' + (lang==='en'?'sum+activate':'求和+激活') + '</text>';
+    // output
+    s += '<line x1="337" y1="66" x2="480" y2="66" stroke="#34d399" stroke-width="3" marker-end="url(#ah)"/>';
+    s += '<text x="410" y="56" text-anchor="middle" font-size="13" fill="#065f46">y = ' + fmt(y) + '</text>';
+    // target
+    s += '<circle cx="530" cy="66" r="17" fill="#dcfce7" stroke="#1fa86c" stroke-width="2"/>';
+    s += '<text x="530" y="70" text-anchor="middle" font-size="11" fill="#14532d">t=' + fmt(t) + '</text>';
+    s += '<defs><marker id="ah" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#34d399"/></marker></defs>';
+    el.svg.innerHTML = s;
+  }
+
+  function render(msg){
+    var w1 = getV('w1'), w2 = getV('w2'), t = getV('t');
+    var y = w1 * X1 + w2 * X2;
+    var e = t - y;
+    el.w1v.textContent = fmt(w1);
+    el.w2v.textContent = fmt(w2);
+    el.tv.textContent = fmt(t);
+    el.formula.innerHTML = (lang==='en' ? 'weighted sum = ' : '加权和 sum = ') + fmt(w1) + '×2 + ' + fmt(w2) + '×1 = <b>' + fmt(y) + '</b>' + (lang==='en' ? ' (inputs × weights, then sum)' : '（权重×输入后求和）');
+    el.out.textContent = (lang==='en' ? 'Output y = ' : '输出 y = ') + fmt(y);
+    el.err.textContent = fmt(e) + (lang==='en' ? (e > 0 ? ' (y too small, increase weights)' : e < 0 ? ' (y too big, decrease weights)' : ' (hit the target!)') : (e > 0 ? '（y 偏小，需调大权重）' : e < 0 ? '（y 偏大，需调小权重）' : '（已命中！）'));
+    var ratio = Math.min(100, Math.abs(e) / 5 * 100);
+    el.ebar.style.width = ratio.toFixed(0) + '%';
+    el.ebar.parentNode.style.background = '#eef2f7';
+    el.ebar.style.background = Math.abs(e) < 0.02 ? '#1fa86c' : '#ef4444';
+    el.ep.textContent = epoch;
+    if (msg){ el.st.textContent = msg; }
+    drawSvg(w1, w2, y, t);
+  }
+
+  // 单步训练：推进一个 epoch，返回本轮误差描述
+  function stepOnce(){
+    var w1 = getV('w1'), w2 = getV('w2'), t = getV('t');
+    var y = w1 * X1 + w2 * X2;
+    var e = t - y;
+    if (Math.abs(e) < 0.02){
+      epoch++;
+      return { done: true, msg: lang==='en' ? ('Error ≈ 0, learned! ✓ (w₁=' + fmt(w1) + ', w₂=' + fmt(w2) + ')') : ('误差≈0，已学会 ✓（w₁=' + fmt(w1) + '，w₂=' + fmt(w2) + '）') };
+    }
+    var nw1 = clamp(w1 + LR * e * X1, 0, 1.5);
+    var nw2 = clamp(w2 + LR * e * X2, 0, 1.5);
+    el.w1.value = nw1.toFixed(2);
+    el.w2.value = nw2.toFixed(2);
+    epoch++;
+    var cap = '';
+    if (nw1 >= 1.5 && e > 0) cap = lang==='en' ? '; w₁ at max 1.5, only w₂ can catch up (lower w₁ first to go faster)' : '；w₁ 已到上限 1.5，只能靠 w₂ 追赶（想更快？先手动调低 w₁）';
+    var base = lang==='en' ? ('error ' + fmt(e) + ' → w₁ ' + fmt(w1) + '→' + fmt(nw1) + ', w₂ ' + fmt(w2) + '→' + fmt(nw2) + ' (epoch ' + epoch + ')') : ('误差 ' + fmt(e) + ' → w₁ ' + fmt(w1) + '→' + fmt(nw1) + '，w₂ ' + fmt(w2) + '→' + fmt(nw2) + '（epoch ' + epoch + '）');
+    return { done: false, msg: base + cap };
+  }
+
+  // 分步训练动画：每步 150ms 刷新，让学生看到权重被误差一步步推准
+  // 用 setTimeout 链代替 setInterval，避免并发 interval 互相干扰
+  function train(n){
+    if (training) return;
+    training = true;
+    var remaining = n;
+    el.s1.disabled = el.s20.disabled = el.rs.disabled = true;
+    (function step(){
+      if (remaining <= 0){ // 步数用完，正常收尾
+        training = false;
+        el.s1.disabled = el.s20.disabled = el.rs.disabled = false;
+        render(lang==='en' ? ('✅ Finished ' + n + ' steps (epoch ' + epoch + '). Almost there? Press Train 20 steps again.') : ('✅ 完成 ' + n + ' 步训练（epoch ' + epoch + '）。还差一点？再点一次「训练 20 步」。'));
+        return;
+      }
+      var r = stepOnce();
+      render('▶ ' + r.msg);
+      remaining--;
+      if (r.done){ // 已学会，提前收尾
+        training = false;
+        el.s1.disabled = el.s20.disabled = el.rs.disabled = false;
+        render(lang==='en' ? ('🎉 ' + r.msg + ' — watch: the error pushed the weights into place step by step!') : ('🎉 ' + r.msg + ' —— 看：误差一步步把权重推到了正确位置！'));
+        return;
+      }
+      setTimeout(step, 150);
+    })();
+  }
+
+  el.w1.addEventListener('input', function(){ if(!training) render(lang==='en' ? 'Manual: watch how output y changes (epoch keeps counting).' : '手动调权：观察输出 y 怎么变（训练轮次不清零）。'); });
+  el.w2.addEventListener('input', function(){ if(!training) render(lang==='en' ? 'Manual: watch how output y changes (epoch keeps counting).' : '手动调权：观察输出 y 怎么变（训练轮次不清零）。'); });
+  el.t.addEventListener('input', function(){ if(!training) render(lang==='en' ? 'Target changed — error is larger now. Press Train to let weights catch up.' : '改了目标 t：现在误差变大，点「训练」让权重追上它。'); });
+  el.s1.addEventListener('click', function(){ train(1); });
+  el.s20.addEventListener('click', function(){ train(20); });
+  el.rs.addEventListener('click', function(){
+    if (training) return;
+    el.w1.value = 0.5; el.w2.value = 0.3; el.t.value = 3; epoch = 0;
+    render(lang==='en' ? 'Reset: w₁=0.50, w₂=0.30, t=3.00. Press Train 20 steps to see the error push weights into place.' : '已重置：w₁=0.50，w₂=0.30，t=3.00。点「训练 20 步」看误差把权重一步步推准。');
+  });
+  document.getElementById('langBtn').addEventListener('click', function(){ setLang(lang === 'zh' ? 'en' : 'zh'); });
+
+  render(lang==='en' ? 'Ready! Drag t to 4.0 and press Train 20 steps to watch the error push the weights (slow motion).' : '准备好了！试试把 t 拖到 4.0，再点「训练 20 步」，看误差怎么一步步把权重推准（现在是慢动作）。');
+  setLang('en'); // 应用英文到全部静态标签（默认英文界面）
+})();
+</script>
+
+
+<div class="qzwrap" style="border:1px solid var(--line);border-radius:12px;padding:14px;margin-top:14px;background:#fff;">
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+    <h2 style="font-size:15px;margin:0 0 6px;">🎯 考点小测 <span style="font-size:11px;color:var(--mut);font-weight:400">Quiz · IGCSE/A-Level</span></h2>
+    <span id="qzScore" style="font-size:12px;color:var(--mut);font-weight:700;">—</span>
+  </div>
+  <div id="qzBody" style="font-size:13px;line-height:1.6;"></div>
+</div>
+<script>
+(function(){
+  var QUIZ = [{"ans": 0, "zh": {"q": "在监督学习（supervised learning）中，训练数据最重要的特征是什么？", "opts": ["每个样本都带有正确答案标签", "数据量越大越乱", "不需要任何人工处理", "只包含文字不包含图片"], "exp": "监督学习 = 用「输入 + 正确答案」的例子训练，标签（label）是核心。无标签的自主学习是非监督学习（unsupervised learning）。", "note": "ML basics"}, "en": {"q": "In supervised learning, what is the key feature of the training data?", "opts": ["Every sample has a correct-answer label", "More data means more noise", "No human processing is needed", "It only contains text, not images"], "exp": "Supervised learning = training with input + correct-answer pairs; the label is essential. Learning without labels is unsupervised learning.", "note": "ML basics"}}, {"ans": 0, "zh": {"q": "专家系统（expert system）与神经网络（neural network）的关键区别是？", "opts": ["专家系统靠人写规则、能解释推理；神经网络从数据学、像黑箱", "神经网络不需要数据", "专家系统一定更准确", "两者完全相同"], "exp": "专家系统 = 知识库 + 推理引擎，规则透明可解释；神经网络 = 从数据自动学规律，准确率高但解释性差（black box）。", "note": "AI 对比"}, "en": {"q": "What is the key difference between an expert system and a neural network?", "opts": ["Expert systems use human-written rules and can explain their reasoning; neural networks learn from data and act like a black box", "Neural networks need no data", "Expert systems are always more accurate", "They are exactly the same"], "exp": "Expert system = knowledge base + inference engine, transparent rules; neural network = learns patterns from data, accurate but hard to explain (black box).", "note": "AI comparison"}}, {"ans": 0, "zh": {"q": "一个神经元：输入 x₁=2、x₂=1，权重 w₁=0.5、w₂=0.3，输出 y = w₁x₁ + w₂x₂。y 等于？", "opts": ["1.3", "0.8", "1.6", "3.0"], "exp": "y = 0.5×2 + 0.3×1 = 1.0 + 0.3 = 1.3。加权和（weighted sum）= 每个输入×对应权重再求和。", "note": "计算题"}, "en": {"q": "A neuron: inputs x₁=2, x₂=1, weights w₁=0.5, w₂=0.3, output y = w₁x₁ + w₂x₂. What is y?", "opts": ["1.3", "0.8", "1.6", "3.0"], "exp": "y = 0.5×2 + 0.3×1 = 1.0 + 0.3 = 1.3. Weighted sum = each input times its weight, then summed.", "note": "Calculation"}}];
+  var qzlang = 'en';          // 默认英文（与主界面一致）
+  var qi = 0, correct = 0, answered = false;
+  var body = document.getElementById('qzBody');
+  var score = document.getElementById('qzScore');
+  function cur(it){ return qzlang === 'en' ? it.en : it.zh; }
+  function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function pick(zh, en){ return qzlang === 'en' ? en : zh; }
+  function show(){
+    if (qi >= QUIZ.length){ end(); return; }
+    var it = QUIZ[qi], c = cur(it);
+    answered = false;
+    score.textContent = correct + ' / ' + QUIZ.length;
+    var h = '<div style="margin-bottom:6px;"><b>' + esc(c.q) + '</b></div>';
+    if (c.note){ h += '<div style="font-size:11px;color:var(--mut);margin-bottom:6px;">' + pick('考点：','Topic: ') + esc(c.note) + '</div>'; }
+    c.opts.forEach(function(o, i){
+      h += '<button data-i="'+i+'" style="display:block;width:100%;text-align:left;margin:4px 0;padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:#f8fafc;font-size:13px;cursor:pointer;font-family:inherit;">' + esc(o) + '</button>';
+    });
+    h += '<div id="qzExp" style="margin-top:8px;min-height:20px;"></div>';
+    h += '<div style="margin-top:8px;"><button id="qzNext" style="border:0;border-radius:7px;padding:6px 14px;font-size:13px;cursor:pointer;background:var(--blue);color:#fff;font-family:inherit;">' + (qi === QUIZ.length-1 ? pick('查看结果','See result') : pick('下一题','Next')) + '</button></div>';
+    body.innerHTML = h;
+    body.querySelectorAll('button[data-i]').forEach(function(b){
+      b.addEventListener('click', function(){
+        if (answered) return;
+        answered = true;
+        var idx = parseInt(b.dataset.i, 10);
+        var ok = (idx === it.ans);
+        if (ok) correct++;
+        body.querySelectorAll('button[data-i]').forEach(function(x, j){
+          var jj = parseInt(x.dataset.i, 10);
+          if (jj === it.ans){ x.style.borderColor = 'var(--green)'; x.style.background = '#dcfce7'; }
+          else if (jj === idx){ x.style.borderColor = 'var(--red)'; x.style.background = '#fee2e2'; }
+          x.disabled = true;
+        });
+        var exp = document.getElementById('qzExp');
+        exp.innerHTML = (ok ? (qzlang==='en'?'✅ Correct!':'✅ 答对！') : (qzlang==='en'?'❌ Wrong. Correct answer: ':'❌ 答错。正确答案：') + esc(c.opts[it.ans]) + (qzlang==='en'?'.': '。')) + '<br>' + esc(c.exp);
+        score.textContent = correct + ' / ' + QUIZ.length;
+      });
+    });
+    document.getElementById('qzNext').addEventListener('click', function(){ qi++; show(); });
+  }
+  function end(){
+    score.textContent = correct + ' / ' + QUIZ.length;
+    var pct = Math.round(correct / QUIZ.length * 100);
+    var msg = pct === 100 ? pick('🎉 全对！概念很扎实。','🎉 Perfect! Solid understanding.') : pct >= 67 ? pick('👍 不错！再看一眼错题解析。','👍 Good! Review the explanations of any wrong ones.') : pick('💪 建议回到上面演示重玩一遍，再回来测。','💪 Replay the demo above, then try again.');
+    body.innerHTML = '<div style="font-size:15px;font-weight:700;margin-bottom:6px;">' + pick('测试完成：','Quiz done: ') + correct + ' / ' + QUIZ.length + ' (' + pct + '%)</div><div>' + msg + '</div><div style="margin-top:10px;"><button id="qzRestart" style="border:0;border-radius:7px;padding:6px 14px;font-size:13px;cursor:pointer;background:var(--green);color:#fff;font-family:inherit;">' + pick('再测一次','Retry') + '</button></div>';
+    document.getElementById('qzRestart').addEventListener('click', function(){ qi = 0; correct = 0; show(); });
+  }
+  function setQzLang(l){ qzlang = l; if (qi < QUIZ.length){ show(); } }
+  window.quizSetLang = setQzLang;   // 供主 setLang 联动
+  show();
+})();
+</script>
+
+</body>
+</html>
